@@ -142,14 +142,20 @@ int main(void) {
                     printf("The valid file name is: %s\n", filename);
 
                     int docInCache = findInCache(filename);
-                    if (docInCache == -1) {
-                        //cache doesn't contain the doc
+
+                    if (docInCache != -1 && checkStale(docInCache) == 0) {
+                        // cache contains the doc and it's fresh
+                        printf("%s\n", "Cache contains the file!");
+                        update(docInCache);
+                    } else if (docInCache == -1) {
+                        //cache doesn't contain the file
                         cacheHTTPRequest(filename, &host[0], &doc[0]);
                     } else {
-                        printf("%s\n", "Cache contains the file!");
-                        //cache contains the doc
-                        update(docInCache);
+                        // cache contains the doc but it's stale
+                        printf("%s\n", "The file in the cache is stale!");
+                        deleteInCache(docInCache);
                     }
+
                     sendFileToClient(i, filename);
                     FD_CLR(i, &allDescriptors);
                     close(i);
