@@ -30,9 +30,11 @@ int main(void) {
     char s[INET6_ADDRSTRLEN];
     int rv;
     void *addr;
-    char buf[2056], doc[512], host[512], url[512];
+    char buf[2056], doc[512], host[512];
     int byte_count;
     int i;
+    char *filename;
+
     fd_set clientDescriptors;
     fd_set allDescriptors;
 
@@ -130,24 +132,25 @@ int main(void) {
                     if (recv(i, buf, sizeof buf, 0) == -1) {
                         perror("send");
                     }
-                    printf("buf is: %s\n", buf);
-                    strcpy(url, buf);
+                    printf("%s\n", buf);
+
+                    filename = generateFileName(&buf[0]);
                     parseHostAndDoc(&buf[0], &doc[0], &host[0]);
                     printf("%s\n", doc);
                     printf("%s\n", host);
-                    int docInCache = findInCache(&url[0]);
-                    printf("url is: %s\n", url);
-                    if (docInCache != -1 && checkStale(docInCache) == 0) {
-                        //file exists and fresh
-                        update(docInCache);
+
+                    printf("The valid file name is: %s\n", filename);
+
+                    int docInCache = findInCache(filename);
+                    if (docInCache == -1) {
+                        //cache doesn't contain the doc
+                        cacheHTTPRequest(filename, &host[0], &doc[0]);
                     } else {
-                        if (docInCache != -1 && checkStale(docInCache) == 1) {
-                            deleteInCache(docInCache);
-                        }
-                        printf("url is: %s\n", url);
-                        cacheHTTPRequest(&url[0], &host[0], &doc[0]);
+                        printf("%s\n", "Cache contains the file!");
+                        //cache contains the doc
+                        update(docInCache);
                     }
-                    sendFileToClient(i, &doc[0]);
+                    sendFileToClient(i, filename);
                     FD_CLR(i, &allDescriptors);
                     close(i);
                     printf("current size of the cache is: %d\n", numOfFile);

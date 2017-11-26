@@ -17,7 +17,6 @@ struct Headers {
 };
 
 struct Pages {
-    char *url;
     char *file_name;
     time_t last_used_time;
     struct Headers *header;
@@ -41,11 +40,26 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+//generate a valid file name
+char *generateFileName(char *message) {
+    char *filename = malloc(strlen(message) + 1);
+    int i;
+
+    strcpy(filename, message);
+
+    for (i = 0; filename[i] != '\0'; i++) {
+        if (filename[i] == '/') {
+            filename[i] = '_';
+        }
+    }
+    return filename;
+}
+
 // check if the cache contains the doc
-int findInCache(char* url) {
+int findInCache(char* filename) {
     int i;
     for (i = 0; i < numOfFile; i++) {
-        if (strcmp(cache[i].url, url) == 0) {
+        if (strcmp(cache[i].file_name, filename) == 0) {
             return i;
         }
     }
@@ -144,16 +158,15 @@ struct Headers *parseHeader(char *recvHeader) {
 }
 
 //generate page
-struct Pages *generatePage(char *url, struct Headers *header, char *doc) {
+struct Pages *generatePage(char *filename, struct Headers *header) {
     printf("%s\n", "Inside generatePage");
-    struct Pages page;
-    page.url = malloc(strlen(url));
-    strcpy(page.url, url);
-    page.file_name = malloc(strlen(doc));
-    strcpy(page.file_name, doc);
-    page.last_used_time = time(NULL);
-    page.header = header;
-    return &page;
+    struct Pages *page = malloc(sizeof( struct Pages));
+
+    page -> file_name = malloc(strlen(filename));
+    strcpy(page -> file_name, filename);
+    page -> last_used_time = time(NULL);
+    page -> header = header;
+    return page;
 }
 
 int findTheOldest() {
@@ -187,7 +200,7 @@ void deleteInCache(int docInCache) {
 }
 
 
-void cacheHTTPRequest(char *url, char *host, char *doc) {
+void cacheHTTPRequest(char *filename, char *host, char *doc) {
     struct addrinfo hints, *servinfo, *res;
     int sockfd, byte_count, maxDescriptors, selectVal, i;
     FILE * fp;
@@ -197,9 +210,6 @@ void cacheHTTPRequest(char *url, char *host, char *doc) {
 
     int iter = 0;
     int hasObtainedHeader = 0;
-
-    char dateStr[20];
-    char filename[200];
 
 
     fd_set clientDescriptors;
@@ -222,17 +232,6 @@ void cacheHTTPRequest(char *url, char *host, char *doc) {
     printf("%s\n", message);
     send(sockfd, message, strlen(message), 0);
     printf("GET Sent...\n");
-    printf("The url is %s\n", url);
-
-    strcpy(filename, url);
-
-    for (i = 0; filename[i] != '\0'; i++) {
-        if (filename[i] == '/') {
-            filename[i] = '_';
-        }
-    }
-
-    printf("The file name: %s\n", filename);
 
     fp = fopen (filename, "w+");
 
@@ -277,7 +276,7 @@ void cacheHTTPRequest(char *url, char *host, char *doc) {
     if (header -> hasExpire == 0 && header -> hasLastModifiedTime == 0) {
         printf("%s\n", "Missing important headers, reject caching!");
     } else {
-        struct Pages *page = generatePage(url, header, doc);
+        struct Pages *page = generatePage(filename, header);
         addInCache(page);
     }
 }

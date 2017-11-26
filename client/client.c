@@ -12,6 +12,7 @@
 
 #define PORT "5000" // the port client will be connecting to
 #define MAXDATASIZE 100 // max number of bytes we can get at once
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
     if (sa->sa_family == AF_INET) {
@@ -20,7 +21,25 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+char *generateFileName(char *message) {
+    char dateStr[20];
+    char *filename;
+    time_t now = time(NULL);
+    int i;
 
+    strftime(dateStr, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
+    filename = malloc(strlen(message) + strlen(dateStr) + 1);
+
+    strcpy(filename, dateStr);
+    strcat(filename, message);
+
+    for (i = 0; filename[i] != '\0'; i++) {
+        if (filename[i] == '/') {
+            filename[i] = '_';
+        }
+    }
+    return filename;
+}
 
 int main(int argc, char *argv[]) {
     int sockfd, numbytes, maxDescriptors, selectVal, byte_count;
@@ -32,7 +51,7 @@ int main(int argc, char *argv[]) {
     FILE *fp;
     int i;
     char dateStr[20];
-    char filename[200];
+    char *filename;
 
     fd_set clientDescriptors;
     fd_set allDescriptors;
@@ -77,22 +96,11 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    time_t now = time(NULL);
-    strftime(dateStr, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
-    strcpy(filename, dateStr);
-    strcat(filename, message);
-
-    for (i = 0; filename[i] != '\0'; i++) {
-        if (filename[i] == '/') {
-            filename[i] = '_';
-        }
-    }
-    printf("The file name: %s\n", filename);
-
+    filename = generateFileName(message);
 
     if ((fp = fopen(filename, "w+")) == NULL) {
-       printf("File could not be found or opened; Aborting\n");
-       return 1;
+        printf("File could not be found or opened; Aborting\n");
+        return 1;
     }
     //clear the sets
     FD_ZERO(&clientDescriptors);
