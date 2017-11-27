@@ -10,7 +10,6 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define PORT "5000" // the port client will be connecting to
 #define MAXDATASIZE 100 // max number of bytes we can get at once
 
 // get sockaddr, IPv4 or IPv6:
@@ -56,15 +55,15 @@ int main(int argc, char *argv[]) {
     fd_set clientDescriptors;
     fd_set allDescriptors;
 
-    if (argc != 3) {
-        fprintf(stderr,"usage: client hostname url\n");
+    if (argc != 4) {
+        fprintf(stderr,"usage: client hostname port url\n");
         exit(1);
     }
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
@@ -90,7 +89,7 @@ int main(int argc, char *argv[]) {
     printf("client: connecting to %s\n", s);
     freeaddrinfo(servinfo); // all done with this structure
 
-    message = argv[2];
+    message = argv[3];
     if ((numbytes = send(sockfd, message, strlen(message) + 1, 0)) == -1) {
         perror("send");
         exit(1);

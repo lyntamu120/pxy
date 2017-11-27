@@ -13,14 +13,14 @@
 
 #include "structures.h"
 
-#define PORT "5000" // the port users will be connecting to
+// #define PORT "5000" // the port users will be connecting to
 #define BACKLOG 10 // how many pending connections queue will hold
 #define MAXNUMOFCACHE 10 // how many files will be cached
 
 struct Pages cache[MAXNUMOFCACHE];
 int numOfFile = 0;
 
-int main(void) {
+int main(int argc, char *argv[]) {
     int sockfd, new_fd, maxDescriptors, selectVal; // listen on sock_fd, new connection on new_fd
     struct addrinfo hints, *servinfo, *p, *res;
     struct sockaddr_storage their_addr; // connector's address information
@@ -39,12 +39,17 @@ int main(void) {
     fd_set clientDescriptors;
     fd_set allDescriptors;
 
+    if (argc < 3) {
+        fprintf(stderr,"usage: ./proxy hostname port\n");
+        exit(1);
+    }
+
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE; // use my IP
 
-    if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
