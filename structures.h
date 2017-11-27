@@ -458,7 +458,12 @@ void parseHostAndDoc(char *url, char *doc, char *host) {
         if (i == 1) {
             strcpy(host, token);
         } else {
-            strcpy(doc, token);
+            if (i == 2) {
+                strcpy(doc, token);
+            } else {
+                strcat(doc, "/");
+                strcat(doc, token);
+            }
         }
         i++;
     }
