@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     freeaddrinfo(servinfo); // all done with this structure
 
     message = argv[2];
-    if ((numbytes = send(sockfd, message, strlen(message), 0)) == -1) {
+    if ((numbytes = send(sockfd, message, strlen(message) + 1, 0)) == -1) {
         perror("send");
         exit(1);
     }

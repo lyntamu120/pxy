@@ -256,6 +256,7 @@ int sendConditionalHttpRequest(char *host, char *doc, char *date) {
 // return 304 if it contains 304
 int checkIf304(char *buf) {
     if (strstr(buf, "304") != NULL) {
+        printf("We receive a 304\n");
         return 304;
     } else {
         return 200;
@@ -446,6 +447,12 @@ void parseHostAndDoc(char *url, char *doc, char *host) {
     char delim[] = "/";
     char *token;
     int i = 1;
+
+    char *httpPos = strstr(url, "//");
+    if (httpPos != NULL) {
+        url = httpPos + 2;
+    }
+
     for(token = strtok(url, delim); token != NULL; token = strtok(NULL, delim)) {
         // printf("%s\n", token);
         if (i == 1) {
