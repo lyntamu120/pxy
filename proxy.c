@@ -14,7 +14,6 @@
 #include "structures.h"
 
 #define BACKLOG 10 // how many pending connections queue will hold
-#define MAXNUMOFCACHE 10 // how many files will be cached
 
 struct Pages cache[MAXNUMOFCACHE];
 int numOfFile = 0;

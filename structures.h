@@ -213,6 +213,7 @@ void addInCache(struct Pages *page) {
     int index;
     if (numOfFile == MAXNUMOFCACHE) {
         index = findTheOldest();
+        printf("The cache is full, %s\n", "remove the least recently used file");
         cache[index] = *page;
     } else {
         cache[numOfFile] = *page;
@@ -336,7 +337,7 @@ int handleStale(int index, char *filename, char *host, char *doc) {
                     return 304;
                 }
             }
-            printf("http: recv()'d %d bytes of data in buf\n", byte_count);
+            //printf("http: recv()'d %d bytes of data in buf\n", byte_count);
             fwrite(buf , 1 , byte_count , fp );
         }
 
@@ -430,7 +431,7 @@ void cacheHTTPRequest(char *filename, char *host, char *doc) {
             if (hasObtainedHeader == 0) {
                 hasObtainedHeader = obtainHeader(&iter, &buf[0], &recvHeader[0], byte_count);
             }
-            printf("http: recv()'d %d bytes of data in buf\n", byte_count);
+            //printf("http: recv()'d %d bytes of data in buf\n", byte_count);
             fwrite(buf , 1 , byte_count , fp );
         }
 
@@ -482,6 +483,7 @@ void sendFileToClient(int new_fd, char *doc) {
     char buf[512];
     int byte_count;
 
+    printf("start sending file: %s to the client\n", doc);
     file = fopen(doc, "r");
     if (file) {
         while ((nread = fread(buf, 1, sizeof buf, file)) > 0) {
@@ -489,11 +491,11 @@ void sendFileToClient(int new_fd, char *doc) {
             if (byte_count == -1) {
                 perror("send");
             }
-            printf("send()'d %d bytes of data in buf to the client\n", byte_count);
+            // printf("send()'d %d bytes of data in buf to the client\n", byte_count);
 
             if (nread < 512) {
                 if (feof(file))
-                    printf("End of file\n");
+                    printf("End of file, finish sending!\n");
                 if (ferror(file))
                     printf("Error reading\n");
                 break;
