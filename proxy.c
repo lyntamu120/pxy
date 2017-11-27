@@ -34,6 +34,7 @@ int main(void) {
     int byte_count;
     int i;
     char *filename;
+    int state_code;
 
     fd_set clientDescriptors;
     fd_set allDescriptors;
@@ -153,7 +154,14 @@ int main(void) {
                     } else {
                         // cache contains the doc but it's stale
                         printf("%s\n", "The file in the cache is stale!");
-                        deleteInCache(docInCache);
+                        state_code = handleStale(docInCache, filename, &host[0], &doc[0]);
+                        if (state_code == 200) {
+                            //denotes the file is stale
+                            deleteInCache(docInCache);
+                        } else {
+                            update(docInCache);
+                        }
+
                     }
 
                     sendFileToClient(i, filename);
