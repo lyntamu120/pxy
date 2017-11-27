@@ -43,6 +43,16 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int startWith(char *str, char *sample) {
+    char *start = malloc(strlen(sample));
+    memcpy(start, str, strlen(sample));
+    if (strcmp(start, sample) == 0) {
+        return 1;
+    }
+    free(start);
+    return 0;
+}
+
 //generate a valid file name
 char *generateFileName(char *message) {
     char *filename = malloc(strlen(message) + 1);
@@ -138,7 +148,7 @@ struct Headers *parseHeader(char *recvHeader) {
     headerField = strtok(recvHeader, "\r\n");
     while( headerField != NULL ) {
         printf("The pure header content is: %s\n", headerField);
-        if (strstr(headerField, Expires) != NULL) {
+        if (strstr(headerField, Expires) != NULL && startWith(headerField, "Expires:")) {
             dateStr = strstr(headerField, ":") + 2;
             printf("%s: %s\n", "Has Expire Header!", dateStr);
             header->expireStr = malloc(strlen(dateStr) + 1);
@@ -146,7 +156,7 @@ struct Headers *parseHeader(char *recvHeader) {
             header->expire = parseDate(dateStr);
             header->hasExpire = 1;
         }
-        if (strstr(headerField, Date) != NULL) {
+        if (strstr(headerField, Date) != NULL && startWith(headerField, "Date:")) {
             dateStr = strstr(headerField, ":") + 2;
             printf("%s: %s\n", "Has Date Header!", dateStr);
             header->dateStr = malloc(strlen(dateStr) + 1);
@@ -154,7 +164,7 @@ struct Headers *parseHeader(char *recvHeader) {
             header->date = parseDate(dateStr);
             header->hasDate = 1;
         }
-        if (strstr(headerField, LastModified) != NULL) {
+        if (strstr(headerField, LastModified) != NULL && startWith(headerField, "Last-Modified:")) {
             dateStr = strstr(headerField, ":") + 2;
             printf("%s: %s\n", "Has LastModified Header!", dateStr);
             header->last_modified_time_str = malloc(strlen(dateStr) + 1);
