@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
                         cacheHTTPRequest(filename, &host[0], &doc[0]);
                     } else {
                         // cache contains the doc but it's stale
-                        printf("%s\n", "The file in the cache is stale!");
+                        printf("%s\n", "The file in the cache maybe stale, send a conditional GET");
                         state_code = handleStale(docInCache, filename, &host[0], &doc[0]);
                         if (state_code == 200) {
                             //denotes the file is stale

@@ -83,27 +83,44 @@ int findInCache(char* filename) {
 
 // check the status of the existing cached file
 // 0: good; 1: expired or modified recently
+// non bonus
+// int checkStale(int index) {
+//     double s1, s2;
+//     struct Headers *header = cache[index].header;
+//     if (header -> hasExpire) {
+//         s1 = difftime(time(NULL), header -> expire);
+//         if (s1 > 0) {
+//             printf("%s\n", "Out of expire date: The file is stale!");
+//             return 1;
+//         }
+//     } else {
+//         //cache[i] has last_modified_time and doesn't have expire
+//         s1 = difftime(time(NULL), header -> date);
+//         s2 = difftime(time(NULL), header -> last_modified_time);
+//         if (s1 > DAYINSECOND || s2 < 30 * DAYINSECOND) {
+//             printf("%s\n", "Last modified recently: The file is stale!");
+//             return 1;
+//         } else {
+//             printf("%s\n", "Last modified long time ago: The file is fresh!");
+//         }
+//     }
+//     return 0;
+// }
+
+// check the status of the existing cached file
+// 0: good; 1: expired or modified recently
 int checkStale(int index) {
     double s1, s2;
     struct Headers *header = cache[index].header;
     if (header -> hasExpire) {
         s1 = difftime(time(NULL), header -> expire);
-        if (s1 > 0) {
-            printf("%s\n", "Out of expire date: The file is stale!");
-            return 1;
-        }
-    } else {
-        //cache[i] has last_modified_time and doesn't have expire
-        s1 = difftime(time(NULL), header -> date);
-        s2 = difftime(time(NULL), header -> last_modified_time);
-        if (s1 > DAYINSECOND || s2 < 30 * DAYINSECOND) {
-            printf("%s\n", "Last modified recently: The file is stale!");
-            return 1;
-        } else {
-            printf("%s\n", "Last modified long time ago: The file is fresh!");
+        if (s1 <= 0) {
+            printf("%s\n", "Within expire date: The file is fresh!");
+            return 0;
         }
     }
-    return 0;
+    // otherwise you need to send a conditional GET
+    return 1;
 }
 
 // update the last_used_time for current doc
