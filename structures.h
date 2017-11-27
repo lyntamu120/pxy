@@ -99,6 +99,8 @@ int checkStale(int index) {
         if (s1 > DAYINSECOND || s2 < 30 * DAYINSECOND) {
             printf("%s\n", "Last modified recently: The file is stale!");
             return 1;
+        } else {
+            printf("%s\n", "Last modified long time ago: The file is fresh!");
         }
     }
     return 0;
