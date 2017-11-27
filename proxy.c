@@ -13,7 +13,6 @@
 
 #include "structures.h"
 
-// #define PORT "5000" // the port users will be connecting to
 #define BACKLOG 10 // how many pending connections queue will hold
 #define MAXNUMOFCACHE 10 // how many files will be cached
 
@@ -74,7 +73,6 @@ int main(int argc, char *argv[]) {
         addr = &(ipv4->sin_addr);
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, s, sizeof s);
-        printf("The sockfd from server is: %d\n", sockfd);
         break;
     }
     freeaddrinfo(servinfo); // all done with this structure
@@ -104,7 +102,6 @@ int main(int argc, char *argv[]) {
 
     FD_SET(sockfd, &allDescriptors);
     maxDescriptors = sockfd;
-    printf("the # of descriptors are: %d\n", maxDescriptors);
 
     while(1) {
         clientDescriptors = allDescriptors;
@@ -138,20 +135,19 @@ int main(int argc, char *argv[]) {
                     if (recv(i, buf, sizeof buf, 0) == -1) {
                         perror("send");
                     }
-                    printf("%s\n", buf);
 
                     filename = generateFileName(&buf[0]);
                     parseHostAndDoc(&buf[0], &doc[0], &host[0]);
-                    printf("%s\n", doc);
-                    printf("%s\n", host);
+                    printf("Path: %s\n", doc);
+                    printf("Host: %s\n", host);
 
-                    printf("The valid file name is: %s\n", filename);
+                    printf("File name that going to write: %s\n", filename);
 
                     int docInCache = findInCache(filename);
 
                     if (docInCache != -1 && checkStale(docInCache) == 0) {
                         // cache contains the doc and it's fresh
-                        printf("%s\n", "Cache contains the file!");
+                        printf("%s\n", "Cache contains the file, send it to the cient!");
                         update(docInCache);
                     } else if (docInCache == -1) {
                         //cache doesn't contain the file
@@ -172,7 +168,7 @@ int main(int argc, char *argv[]) {
                     sendFileToClient(i, filename);
                     FD_CLR(i, &allDescriptors);
                     close(i);
-                    printf("current size of the cache is: %d\n", numOfFile);
+                    printf("After the transimission, current size of the cache is: %d\n", numOfFile);
                 }
             }
         }

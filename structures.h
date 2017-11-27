@@ -134,7 +134,6 @@ time_t parseDate(char *timeStamp) {
     time_t epoch;
     if (strptime(timeStamp, "%a, %d %b %Y %H:%M:%S %Z", &tm) != NULL) {
         epoch = mktime(&tm);
-        printf("The epoch is: %ld\n", epoch);
         return epoch;
     } else {
         printf("%s\n", "Date format isn't match");
@@ -155,11 +154,9 @@ struct Headers *parseHeader(char *recvHeader) {
 
     headerField = strtok(recvHeader, "\r\n");
     while( headerField != NULL ) {
-
-        printf("The pure header content is: %s\n", headerField);
         if (strstr(headerField, Expires) != NULL && startWith(headerField, "Expires:")) {
             dateStr = strstr(headerField, ":") + 2;
-            printf("%s: %s\n", "Has Expire Header!", dateStr);
+            // printf("%s: %s\n", "Has Expire Header!", dateStr);
             header->expireStr = malloc(strlen(dateStr) + 1);
             strcpy(header->expireStr, dateStr);
             header->expire = parseDate(dateStr);
@@ -167,7 +164,7 @@ struct Headers *parseHeader(char *recvHeader) {
         }
         if (strstr(headerField, Date) != NULL && startWith(headerField, "Date:")) {
             dateStr = strstr(headerField, ":") + 2;
-            printf("%s: %s\n", "Has Date Header!", dateStr);
+            // printf("%s: %s\n", "Has Date Header!", dateStr);
             header->dateStr = malloc(strlen(dateStr) + 1);
             strcpy(header->dateStr, dateStr);
             header->date = parseDate(dateStr);
@@ -175,7 +172,7 @@ struct Headers *parseHeader(char *recvHeader) {
         }
         if (strstr(headerField, LastModified) != NULL && startWith(headerField, "Last-Modified:")) {
             dateStr = strstr(headerField, ":") + 2;
-            printf("%s: %s\n", "Has LastModified Header!", dateStr);
+            // printf("%s: %s\n", "Has LastModified Header!", dateStr);
             header->last_modified_time_str = malloc(strlen(dateStr) + 1);
             strcpy(header->last_modified_time_str, dateStr);
             header->last_modified_time = parseDate(dateStr);
@@ -188,7 +185,7 @@ struct Headers *parseHeader(char *recvHeader) {
 
 //generate page
 struct Pages *generatePage(char *filename, struct Headers *header) {
-    printf("%s\n", "Inside generatePage");
+    // printf("%s\n", "Inside generatePage");
     struct Pages *page = malloc(sizeof( struct Pages));
 
     page -> file_name = malloc(strlen(filename));
@@ -241,9 +238,15 @@ int sendConditionalHttpRequest(char *host, char *doc, char *date) {
 
     getaddrinfo(host, "80", &hints, &res);
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd == -1) {
+        perror("http: socket");
+    }
     printf("Connecting to web server...\n");
-    connect(sockfd, res->ai_addr, res->ai_addrlen);
-    printf("Connected!\n");
+    if (connect(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
+        close(sockfd);
+        perror("http: connect");
+    }
+    printf("Connected to the web server!\n");
     char* sendHeader = "GET /%s HTTP/1.0\r\nHost: %s\r\nIf-Modified-Since: %s\r\n\r\n";
 
     //fill in the parameters
@@ -319,7 +322,7 @@ int handleStale(int index, char *filename, char *host, char *doc) {
         if(FD_ISSET(sockfd, &clientDescriptors)) {
             byte_count = recv(sockfd, buf, sizeof buf, 0);
             if (byte_count == 0) {
-                printf("All data has been received\n");
+                printf("All data has been received from web server\n");
                 fclose(fp);
                 break;
             }
@@ -338,12 +341,9 @@ int handleStale(int index, char *filename, char *host, char *doc) {
         }
 
     }
-    printf("The header content is: %s\n", recvHeader);
 
     //form the header struct
     header = parseHeader(&recvHeader[0]);
-
-    printf("%s\n", "Finish parserHeader");
     if (header->hasExpire == 0 && header->hasLastModifiedTime == 0) {
         printf("%s\n", "Missing important headers, reject caching!");
     } else {
@@ -365,9 +365,15 @@ int sendHTTPRequest(char *host, char *doc) {
 
     getaddrinfo(host, "80", &hints, &res);
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd == -1) {
+        perror("http: socket");
+    }
     printf("Connecting to web server...\n");
-    connect(sockfd, res->ai_addr, res->ai_addrlen);
-    printf("Connected!\n");
+    if (connect(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
+        close(sockfd);
+        perror("http: connect");
+    }
+    printf("Connected to the web server!\n");
     char* sendHeader = "GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n";
 
     //fill in the parameters
@@ -417,7 +423,7 @@ void cacheHTTPRequest(char *filename, char *host, char *doc) {
         if(FD_ISSET(sockfd, &clientDescriptors)) {
             byte_count = recv(sockfd, buf, sizeof buf, 0);
             if (byte_count == 0) {
-                printf("All data has been received\n");
+                printf("All data has been received from web server\n");
                 fclose(fp);
                 break;
             }
@@ -429,12 +435,10 @@ void cacheHTTPRequest(char *filename, char *host, char *doc) {
         }
 
     }
-    printf("The header content is: %s\n", recvHeader);
 
     //form the header struct
     struct Headers *header = parseHeader(&recvHeader[0]);
 
-    printf("%s\n", "Finish parserHeader");
     if (header -> hasExpire == 0 && header -> hasLastModifiedTime == 0) {
         printf("%s\n", "Missing important headers, reject caching!");
     } else {
@@ -478,7 +482,6 @@ void sendFileToClient(int new_fd, char *doc) {
     char buf[512];
     int byte_count;
 
-    printf("%s\n", "Inside the sendFileToClient");
     file = fopen(doc, "r");
     if (file) {
         while ((nread = fread(buf, 1, sizeof buf, file)) > 0) {
