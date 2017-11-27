@@ -44,8 +44,10 @@ void *get_in_addr(struct sockaddr *sa) {
 }
 
 int startWith(char *str, char *sample) {
-    char *start = malloc(strlen(sample));
+    char *start = malloc(strlen(sample) + 1);
     memcpy(start, str, strlen(sample));
+    start[strlen(sample)] = '\0';
+
     if (strcmp(start, sample) == 0) {
         return 1;
     }
@@ -116,6 +118,10 @@ int obtainHeader(int *iter, char* buf, char* recvHeader, int rBytes) {
     }
     memcpy(recvHeader + (*iter), buf, rBytes);
     *iter = *iter + rBytes;
+    if (hasFind == 1) {
+        //mark the end if header
+        recvHeader[*iter] = '\0';
+    }
     return hasFind;
 }
 
@@ -147,6 +153,7 @@ struct Headers *parseHeader(char *recvHeader) {
 
     headerField = strtok(recvHeader, "\r\n");
     while( headerField != NULL ) {
+
         printf("The pure header content is: %s\n", headerField);
         if (strstr(headerField, Expires) != NULL && startWith(headerField, "Expires:")) {
             dateStr = strstr(headerField, ":") + 2;
@@ -266,7 +273,7 @@ int handleStale(int index, char *filename, char *host, char *doc) {
     char *targetDate;
     char buf[512];
     char message[512];
-    char recvHeader[512];
+    char recvHeader[2048];
     char dateFormat[512];
 
     int iter = 0;
@@ -334,7 +341,7 @@ int handleStale(int index, char *filename, char *host, char *doc) {
     header = parseHeader(&recvHeader[0]);
 
     printf("%s\n", "Finish parserHeader");
-    if (header -> hasExpire == 0 && header -> hasLastModifiedTime == 0) {
+    if (header->hasExpire == 0 && header->hasLastModifiedTime == 0) {
         printf("%s\n", "Missing important headers, reject caching!");
     } else {
         struct Pages *page = generatePage(filename, header);
@@ -376,7 +383,7 @@ void cacheHTTPRequest(char *filename, char *host, char *doc) {
     FILE * fp;
     char buf[512];
     char message[512];
-    char recvHeader[512];
+    char recvHeader[2048];
 
     int iter = 0;
     int hasObtainedHeader = 0;
