@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
             perror("client: connect");
             continue;
         }
-        printf("The sockfd from client is: %d\n", sockfd);
         break;
     }
     if (p == NULL) {
